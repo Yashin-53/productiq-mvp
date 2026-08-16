@@ -2,9 +2,11 @@ import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 
 from app.data.seed_products import SEED_PRODUCTS
 from app.services.pipeline import run_enrichment
+from app.services.export import export_products_csv
 
 app = FastAPI(title="ProductIQ API", version="0.1.0")
 
@@ -46,6 +48,22 @@ def _enrich_and_cache(product_id: str):
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/api/export/csv")
+def export_csv():
+    """
+    Export all enriched products as CSV, using column names drawn from
+    Unilog's real expected-output template (see app/services/export.py
+    for the exact mapping and what's in/out of MVP scope).
+    """
+    results = [_enrich_and_cache(p["id"]) for p in SEED_PRODUCTS]
+    csv_text = export_products_csv(results)
+    return PlainTextResponse(
+        content=csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=productiq_export.csv"},
+    )
 
 
 @app.get("/api/products")

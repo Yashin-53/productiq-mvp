@@ -63,3 +63,29 @@ def test_output_current_and_power_scoped_to_output_context():
 def test_no_attribute_returned_without_evidence():
     extracted = extract_from_document("No field matches this sentence. Some generic text without values.")
     assert extracted == {}
+
+
+def test_csv_export_produces_valid_rows():
+    """Regression test for the CSV export feature: output should parse
+    cleanly and preserve the resolved (post-validation) values, including
+    the genuine Siemens weight conflict resolving to the manufacturer-
+    priority value rather than an empty or garbled cell."""
+    import csv
+    import io
+    from app.services.export import export_products_csv
+
+    results = list(_all_results().values())
+    csv_text = export_products_csv(results)
+
+    reader = csv.DictReader(io.StringIO(csv_text))
+    rows = list(reader)
+    assert len(rows) == 6
+
+    siemens_row = next(r for r in rows if r["PART_NUMBER"] == "PSU100C-6EP1332")
+    assert siemens_row["PRODUCTIQ_STATUS"] == "needs_review"
+    weight_idx = next(
+        i for i, (key, _label, _unit) in enumerate(
+            __import__("app.data.schema", fromlist=["ATTRIBUTE_SCHEMA"]).ATTRIBUTE_SCHEMA, start=1
+        ) if key == "weight"
+    )
+    assert siemens_row[f"ATTRIBUTE_VALUE {weight_idx}"] == "600"

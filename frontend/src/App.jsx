@@ -68,8 +68,11 @@ function Dashboard({ setView, openProduct }) {
           </tbody>
         </table>
       </div>
-      <div style={{ marginTop: 20 }}>
+      <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
         <button className="btn" onClick={() => setView('enrich')}>+ Enrich Product</button>
+        <a className="btn secondary" href={`${API}/export/csv`} download style={{ textDecoration: 'none' }}>
+          Export CSV
+        </a>
       </div>
     </>
   );
