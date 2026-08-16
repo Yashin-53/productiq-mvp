@@ -106,6 +106,22 @@ npm run dev
 | GET    | `/api/review-queue`                     | Flagged attributes across all products|
 | POST   | `/api/review/{id}/{attribute}`          | Accept / reject / edit a flagged value|
 
+## Screenshots
+
+**Dashboard** — Overview of all enriched products with confidence scores and verification status:
+![Dashboard](docs/screenshots/01-dashboard.png)
+
+**Product Profile** — Detailed attribute view with evidence-backed confidence scores. Note the color-coding:
+- Green (100%) = verified by all sources
+- Light green (75–89%) = high confidence, not perfect
+- Amber = needs review / lower confidence
+- Red = genuine cross-source conflicts (e.g., Siemens SITOP weight: 600g vs 750g)
+
+![Product Profile](docs/screenshots/02-product-profile.png)
+
+**Evidence Drawer** — Click any attribute to view the sources and exact evidence supporting its value:
+![Evidence Drawer](docs/screenshots/03-evidence-drawer.png)
+
 ## Scaling this to Unilog's actual numbers (150K → 750K SKUs/month)
 
 Not built into the MVP (out of scope for a hackathon prototype per the brief's own
