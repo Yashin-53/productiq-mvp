@@ -131,7 +131,11 @@ function Processing({ onDone }) {
 }
 
 function AttrRow({ attr, onClick }) {
-  const color = attr.status === 'verified' ? 'var(--verified)' : attr.status === 'needs_review' ? 'var(--review)' : 'var(--conflict)';
+  const color =
+    attr.status === 'verified' ? 'var(--verified)'
+    : attr.status === 'high' ? '#a3d977'
+    : attr.status === 'needs_review' ? 'var(--review)'
+    : 'var(--conflict)';
   return (
     <div className="attr-row" onClick={onClick}>
       <div>
