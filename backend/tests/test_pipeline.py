@@ -120,8 +120,9 @@ def test_bulk_csv_upload_parses_real_challenge_schema():
         "XYZ-456,Test widget two,-- Unbranded --,-- No Unilog Brand --,-- No DIB Brand --,Acme Corp\n"
     ).encode("utf-8")
 
-    products = parse_bulk_csv(csv_bytes)
+    products, total_valid_rows = parse_bulk_csv(csv_bytes)
     assert len(products) == 2
+    assert total_valid_rows == 2
     assert products[0]["mfg_part_num"] == "ABC-123"
     assert products[0]["part_manuf"] == "Acme Corp"
     assert products[0]["documents"] == []
@@ -189,7 +190,7 @@ def test_bulk_upload_on_real_dataset_rows_is_honest_not_fabricated():
         "-- Unbranded --,-- No Unilog Brand --,-- No DIB Brand --,Freud Inc (2435)\n"
     ).encode("utf-8")
 
-    products = parse_bulk_csv(csv_bytes)
+    products, _total = parse_bulk_csv(csv_bytes)
     result = run_enrichment(products[0])
 
     assert result["overall_confidence"] == 0.0
@@ -198,3 +199,18 @@ def test_bulk_upload_on_real_dataset_rows_is_honest_not_fabricated():
     assert result["category"] == "Uncategorized (taxonomy classification not implemented in this MVP)"
     for attr in result["attributes"].values():
         assert attr["value"] is None
+
+
+def test_bulk_upload_reports_truncation_honestly():
+    """Regression test for a real gap: uploading a file with more rows
+    than the processing cap was silently truncating with no indication.
+    The parser must report the true row count to the caller."""
+    from app.services.ingestion import parse_bulk_csv
+
+    header = "Mfg_Part_Num,Part_Desc\n"
+    rows = "".join(f"PART-{i},Test product {i}\n" for i in range(75))
+    csv_bytes = (header + rows).encode("utf-8")
+
+    products, total_valid_rows = parse_bulk_csv(csv_bytes, max_rows=50)
+    assert len(products) == 50
+    assert total_valid_rows == 75

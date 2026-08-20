@@ -89,12 +89,12 @@ def build_custom_product(payload: dict) -> dict:
     }
 
 
-def parse_bulk_csv(file_bytes: bytes, max_rows: int = 50) -> list:
+def parse_bulk_csv(file_bytes: bytes, max_rows: int = 50) -> tuple:
     """
     Parses an uploaded CSV using the real challenge input schema.
-    Returns a list of pipeline-ready product dicts (no source documents -
-    bulk upload has no per-row evidence, so these rows will correctly
-    resolve to 0% confidence / not_found, proving no hallucination).
+    Returns (products, total_valid_rows) where products is capped at
+    max_rows (for responsiveness) but total_valid_rows reflects the true
+    count in the file, so the caller can explain any truncation.
     Raises ValueError if required columns can't be found.
     """
     text = file_bytes.decode("utf-8-sig", errors="replace")
@@ -109,12 +109,14 @@ def parse_bulk_csv(file_bytes: bytes, max_rows: int = 50) -> list:
         )
 
     products = []
+    total_valid_rows = 0
     for row in reader:
-        if len(products) >= max_rows:
-            break
         mfg_part_num = (row.get(col_map["mfg_part_num"]) or "").strip()
         part_desc = (row.get(col_map["part_desc"]) or "").strip()
         if not mfg_part_num or not part_desc:
+            continue
+        total_valid_rows += 1
+        if len(products) >= max_rows:
             continue
 
         def _get(key):
@@ -133,4 +135,4 @@ def parse_bulk_csv(file_bytes: bytes, max_rows: int = 50) -> list:
             "documents": [],
         })
 
-    return products
+    return products, total_valid_rows

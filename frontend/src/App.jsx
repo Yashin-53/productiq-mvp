@@ -503,8 +503,13 @@ function DynamicTester() {
 
             {csvResult && (
               <div style={{ marginTop: 18 }}>
+                {csvResult.truncated && (
+                  <div style={{ background: 'rgba(240,169,58,.12)', border: '1px solid var(--review)', borderRadius: 6, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>
+                    ⚠ Your file has {csvResult.total_rows_in_file} valid rows. Processed the first {csvResult.rows_processed} — capped for responsiveness in this MVP (not silently dropped, just limited per batch).
+                  </div>
+                )}
                 <div className="panel" style={{ padding: '12px 16px' }}>
-                  <div className="attr-key">Rows processed: {csvResult.rows_processed}</div>
+                  <div className="attr-key">Rows processed: {csvResult.rows_processed}{csvResult.truncated ? ` / ${csvResult.total_rows_in_file}` : ''}</div>
                   <div className="profile-sub">Average confidence: {csvResult.avg_confidence}%</div>
                 </div>
 

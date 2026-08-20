@@ -136,7 +136,7 @@ async def enrich_upload_csv(file: UploadFile = File(...)):
         raise HTTPException(status_code=422, detail="Please upload a .csv file")
     file_bytes = await file.read()
     try:
-        products = parse_bulk_csv(file_bytes)
+        products, total_valid_rows = parse_bulk_csv(file_bytes)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     if not products:
@@ -145,6 +145,8 @@ async def enrich_upload_csv(file: UploadFile = File(...)):
     results = [run_enrichment(p) for p in products]
     return {
         "rows_processed": len(results),
+        "total_rows_in_file": total_valid_rows,
+        "truncated": total_valid_rows > len(results),
         "avg_confidence": round(sum(r["overall_confidence"] for r in results) / len(results), 1) if results else 0,
         "results": results,
     }
