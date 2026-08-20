@@ -70,6 +70,7 @@ def run_enrichment(product: dict) -> dict:
                     "source_name": doc["source_name"],
                     "source_type": doc["source_type"],
                     "reliability": doc["reliability"],
+                    "source_url": doc.get("source_url"),
                 })
 
     # --- Validation + confidence scoring ---
@@ -128,7 +129,7 @@ def run_enrichment(product: dict) -> dict:
         "review_needed": review_needed,
         "status": "needs_review" if review_needed else "verified",
         "source_documents": [
-            {"source_name": d["source_name"], "source_type": d["source_type"], "reliability": d["reliability"]}
+            {"source_name": d["source_name"], "source_type": d["source_type"], "reliability": d["reliability"], "source_url": d.get("source_url")}
             for d in documents
         ],
     }

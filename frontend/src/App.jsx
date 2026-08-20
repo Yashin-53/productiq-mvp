@@ -183,7 +183,14 @@ function EvidenceDrawer({ attr, onClose, onDecision }) {
 
         {attr.all_sources.map((s, i) => (
           <div key={i} className="evidence-block">
-            <div className="evidence-source">{s.source_name} · {s.source_type.replace('_', ' ')}</div>
+            <div className="evidence-source">
+              {s.source_url ? (
+                <a href={s.source_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-2)', textDecoration: 'underline' }}>
+                  {s.source_name} ↗
+                </a>
+              ) : s.source_name}
+              {' · '}{s.source_type.replace('_', ' ')}
+            </div>
             <div className="evidence-text">"{s.evidence}"</div>
             <div className="evidence-value">{s.value}</div>
           </div>

@@ -29,6 +29,7 @@ SEED_PRODUCTS = [
         "documents": [
             {
                 "source_name": "Manufacturer product page (meanwell-web.com)",
+                "source_url": "https://www.meanwell-web.com/en/mean-well-hdr-60-24-hdr-60-24",
                 "source_type": "manufacturer_website",
                 "reliability": "very_high",
                 "text": (
@@ -39,6 +40,7 @@ SEED_PRODUCTS = [
             },
             {
                 "source_name": "Authorized distributor spec sheet (Newark/RS/Jameco composite)",
+                "source_url": "https://www.digikey.com/en/products/detail/mean-well-usa-inc/HDR-60-24/7703804",
                 "source_type": "distributor",
                 "reliability": "high",
                 "text": (
@@ -64,6 +66,7 @@ SEED_PRODUCTS = [
         "documents": [
             {
                 "source_name": "Manufacturer datasheet (se.com)",
+                "source_url": "https://www.se.com/ww/en/product/ABL8REM24030/regulated-smps---1-or-2-phase---100..240-v-ac---24-v---3-a/",
                 "source_type": "manufacturer_website",
                 "reliability": "very_high",
                 "text": (
@@ -78,6 +81,7 @@ SEED_PRODUCTS = [
             },
             {
                 "source_name": "Manufacturer catalog PDF excerpt",
+                "source_url": "https://www.se.com/ww/en/product/ABL8REM24030/regulated-smps---1-or-2-phase---100..240-v-ac---24-v---3-a/",
                 "source_type": "manufacturer_pdf",
                 "reliability": "very_high",
                 "text": (
@@ -99,6 +103,7 @@ SEED_PRODUCTS = [
         "documents": [
             {
                 "source_name": "Manufacturer product page (phoenixcontact.com)",
+                "source_url": "https://www.phoenixcontact.com/en-us/products/power-supply-quint4-ps1ac24dc5-2904600",
                 "source_type": "manufacturer_website",
                 "reliability": "very_high",
                 "text": (
@@ -124,6 +129,7 @@ SEED_PRODUCTS = [
         "documents": [
             {
                 "source_name": "Manufacturer datasheet (siemens.com)",
+                "source_url": "https://i.siemens.com/1P6EP1332-5BA00",
                 "source_type": "manufacturer_website",
                 "reliability": "very_high",
                 "text": (
@@ -136,6 +142,7 @@ SEED_PRODUCTS = [
             },
             {
                 "source_name": "Distributor listing",
+                "source_url": "https://www.kempstoncontrols.com/6EP1332-5BA00/Siemens/sku/404701",
                 "source_type": "distributor",
                 "reliability": "medium",
                 "text": (
@@ -145,6 +152,7 @@ SEED_PRODUCTS = [
             },
             {
                 "source_name": "Third-party technical database",
+                "source_url": "https://www.mouser.com/en/new/siemens/siemens-sitop-psu100c-power-supplies",
                 "source_type": "third_party",
                 "reliability": "medium",
                 "text": (
@@ -165,6 +173,7 @@ SEED_PRODUCTS = [
         "documents": [
             {
                 "source_name": "Manufacturer product page (industrial.omron.com)",
+                "source_url": "https://automation.omron.com/en/us/products/family/S8VKG/s8vk-g12024",
                 "source_type": "manufacturer_website",
                 "reliability": "very_high",
                 "text": (
@@ -189,6 +198,7 @@ SEED_PRODUCTS = [
         "documents": [
             {
                 "source_name": "Manufacturer product page",
+                "source_url": "https://www.meanwell.com/webapp/product/search.aspx?prod=MDR-40",
                 "source_type": "manufacturer_website",
                 "reliability": "very_high",
                 "text": (

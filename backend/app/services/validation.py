@@ -74,8 +74,9 @@ def resolve_attribute(candidates: list) -> dict:
         "conflict": conflict,
         "primary_source": best["source_name"],
         "primary_evidence": best["evidence"],
+        "primary_source_url": best.get("source_url"),
         "all_sources": [
-            {"source_name": c["source_name"], "value": c["value"], "source_type": c["source_type"], "evidence": c["evidence"]}
+            {"source_name": c["source_name"], "value": c["value"], "source_type": c["source_type"], "evidence": c["evidence"], "source_url": c.get("source_url")}
             for c in candidates
         ],
     }
@@ -113,8 +114,9 @@ def resolve_multi_value_attribute(candidates: list) -> dict:
         "conflict": False,  # union, not a real disagreement
         "primary_source": "Merged across sources",
         "primary_evidence": best["evidence"],
+        "primary_source_url": best.get("source_url"),
         "all_sources": [
-            {"source_name": c["source_name"], "value": c["value"], "source_type": c["source_type"], "evidence": c["evidence"]}
+            {"source_name": c["source_name"], "value": c["value"], "source_type": c["source_type"], "evidence": c["evidence"], "source_url": c.get("source_url")}
             for c in candidates
         ],
     }
