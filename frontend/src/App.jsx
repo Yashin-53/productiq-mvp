@@ -12,6 +12,7 @@ function Sidebar({ view, setView, reviewCount }) {
   const items = [
     ['dashboard', 'Dashboard'],
     ['enrich', 'Enrich Product'],
+    ['dynamic', 'Try Your Own Data'],
     ['review', `Review Queue${reviewCount ? ` (${reviewCount})` : ''}`],
   ];
   return (
@@ -70,6 +71,7 @@ function Dashboard({ setView, openProduct }) {
       </div>
       <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
         <button className="btn" onClick={() => setView('enrich')}>+ Enrich Product</button>
+        <button className="btn secondary" onClick={() => setView('dynamic')}>Try Your Own Data</button>
         <a className="btn secondary" href={`${API}/export/csv`} download style={{ textDecoration: 'none' }}>
           Export CSV
         </a>
@@ -292,6 +294,233 @@ function ReviewQueue({ openProduct }) {
   );
 }
 
+function DynamicTester() {
+  const defaultForm = {
+    partNumber: 'TEST-999',
+    description: 'Test power supply',
+    sourceText: 'Input 100-240V AC. Output 12V DC, 5A, 60W. DIN rail mounting.',
+  };
+
+  const [activeTab, setActiveTab] = useState('quick');
+  const [form, setForm] = useState(defaultForm);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [csvFile, setCsvFile] = useState(null);
+  const [csvResult, setCsvResult] = useState(null);
+  const [csvLoading, setCsvLoading] = useState(false);
+  const [csvError, setCsvError] = useState('');
+
+  const updateField = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleQuickSubmit = async () => {
+    setLoading(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const payload = {
+        mfg_part_num: form.partNumber,
+        part_desc: form.description,
+        e1_brand: '',
+        unilog_brand: '',
+        dib_brand: '',
+        part_manuf: 'Test Manufacturer',
+        documents: [
+          {
+            source_name: 'Quick Test',
+            source_type: 'manufacturer_website',
+            text: form.sourceText,
+          },
+        ],
+      };
+
+      const response = await fetch(`${API}/enrich/custom`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Enrichment failed');
+      }
+      setResult(data);
+    } catch (err) {
+      setError(err.message || 'Unable to run enrichment.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCsvSubmit = async (event) => {
+    event.preventDefault();
+    if (!csvFile) {
+      setCsvError('Select a CSV file first.');
+      return;
+    }
+
+    setCsvLoading(true);
+    setCsvError('');
+    setCsvResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', csvFile);
+
+      const response = await fetch(`${API}/enrich/upload-csv`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'CSV upload failed');
+      }
+
+      setCsvResult(data);
+    } catch (err) {
+      setCsvError(err.message || 'Unable to upload CSV.');
+    } finally {
+      setCsvLoading(false);
+    }
+  };
+
+  const attributeRows = result ? Object.values(result.attributes || {}) : [];
+
+  return (
+    <>
+      <div className="page-header">
+        <h1 className="page-title">Try Your Own Data</h1>
+        <p className="page-sub">Run the real enrichment pipeline live on ad-hoc product data or upload a CSV using the challenge schema.</p>
+      </div>
+
+      <div className="panel" style={{ marginBottom: 18 }}>
+        <div className="pill-row" style={{ marginBottom: 12 }}>
+          <button className={`btn small ${activeTab === 'quick' ? '' : 'secondary'}`} onClick={() => setActiveTab('quick')}>Quick Test</button>
+          <button className={`btn small ${activeTab === 'csv' ? '' : 'secondary'}`} onClick={() => setActiveTab('csv')}>Bulk CSV Upload</button>
+        </div>
+
+        {activeTab === 'quick' && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              <label className="field">
+                <span>Part Number</span>
+                <input value={form.partNumber} onChange={(e) => updateField('partNumber', e.target.value)} />
+              </label>
+              <label className="field">
+                <span>Description</span>
+                <input value={form.description} onChange={(e) => updateField('description', e.target.value)} />
+              </label>
+            </div>
+
+            <label className="field" style={{ marginTop: 12 }}>
+              <span>Source text</span>
+              <textarea value={form.sourceText} onChange={(e) => updateField('sourceText', e.target.value)} rows={6} />
+            </label>
+
+            <div className="pill-row" style={{ marginTop: 12 }}>
+              <button className="btn" onClick={handleQuickSubmit} disabled={loading}>
+                {loading ? 'Running…' : 'Run Enrichment Pipeline'}
+              </button>
+            </div>
+
+            {error && <div className="error-box">{error}</div>}
+
+            {result && (
+              <div style={{ marginTop: 18 }}>
+                <div className="profile-header" style={{ alignItems: 'center' }}>
+                  <div>
+                    <div className="profile-title">{result.part_number}</div>
+                    <div className="profile-sub">{result.brand} · {result.category}</div>
+                    <div className="profile-sub">{result.short_description}</div>
+                  </div>
+                  <ConfidenceGauge value={result.overall_confidence} label="Overall Confidence" />
+                </div>
+
+                <div className="panel" style={{ marginTop: 16, padding: '12px 16px' }}>
+                  <div className="attr-grid">
+                    {attributeRows.map((attr) => (
+                      <div key={attr.key} className="attr-row" style={{ cursor: 'default' }}>
+                        <div>
+                          <div className="attr-key">{attr.label}</div>
+                          <div className={`attr-value ${attr.value ? '' : 'empty'}`}>
+                            {attr.value ? `${attr.value}${attr.unit ? ' ' + attr.unit : ''}` : 'Not found'}
+                          </div>
+                        </div>
+                        {attr.value && (
+                          <span className="conf-pill">
+                            {attr.confidence}%
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {attributeRows.filter((attr) => attr.primary_evidence).length > 0 && (
+                  <div className="panel" style={{ marginTop: 16, padding: '12px 16px' }}>
+                    <div className="attr-key" style={{ marginBottom: 10 }}>Evidence trail</div>
+                    {attributeRows
+                      .filter((attr) => attr.primary_evidence)
+                      .slice(0, 5)
+                      .map((attr) => (
+                        <div key={attr.key} className="evidence-block" style={{ marginBottom: 8 }}>
+                          <div className="evidence-source">{attr.label}</div>
+                          <div className="evidence-text">"{attr.primary_evidence}"</div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'csv' && (
+          <div>
+            <form onSubmit={handleCsvSubmit}>
+              <label className="field">
+                <span>CSV file</span>
+                <input type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files[0])} />
+              </label>
+
+              <div className="pill-row" style={{ marginTop: 12 }}>
+                <button className="btn" type="submit" disabled={csvLoading}>
+                  {csvLoading ? 'Uploading…' : 'Upload & Enrich CSV'}
+                </button>
+              </div>
+            </form>
+
+            {csvError && <div className="error-box">{csvError}</div>}
+
+            {csvResult && (
+              <div style={{ marginTop: 18 }}>
+                <div className="panel" style={{ padding: '12px 16px' }}>
+                  <div className="attr-key">Rows processed: {csvResult.rows_processed}</div>
+                  <div className="profile-sub">Average confidence: {csvResult.avg_confidence}%</div>
+                </div>
+
+                <div className="attr-grid" style={{ marginTop: 16 }}>
+                  {csvResult.results.map((item) => (
+                    <div key={item.id} className="attr-row" style={{ cursor: 'default' }}>
+                      <div>
+                        <div className="attr-key">{item.part_number}</div>
+                        <div className="attr-value">{item.category}</div>
+                      </div>
+                      <span className="conf-pill">{item.overall_confidence}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 export default function App() {
   const [view, setView] = useState('dashboard');
   const [selectedId, setSelectedId] = useState(null);
@@ -313,13 +542,18 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Sidebar view={view === 'profile' || view === 'processing' ? 'enrich' : view} setView={setView} reviewCount={reviewCount} />
+      <Sidebar
+        view={view === 'profile' || view === 'processing' ? 'enrich' : view}
+        setView={setView}
+        reviewCount={reviewCount}
+      />
       <div className="main">
         {view === 'dashboard' && <Dashboard setView={setView} openProduct={openProduct} />}
         {view === 'enrich' && <EnrichPicker onPick={handlePick} />}
         {view === 'processing' && <Processing onDone={handleProcessingDone} />}
         {view === 'profile' && <ProductProfile productId={selectedId} onBack={() => setView('dashboard')} />}
         {view === 'review' && <ReviewQueue openProduct={openProduct} />}
+        {view === 'dynamic' && <DynamicTester />}
       </div>
     </div>
   );
